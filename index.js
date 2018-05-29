@@ -7,7 +7,7 @@ const axios = require('axios');
 // Global constants
 const TEL_PREFIX = 7;
 const DEPARTMENTS = [
-  'EXEC',
+  'CEO',
   'PAD',
   'SCHO',
   'VL',
@@ -15,11 +15,21 @@ const DEPARTMENTS = [
   'FIN',
   'SEC'
 ];
+const KEYWORDS = [
+  { keyword: 'HELLO', definition: 'Display welcome message' },
+  { keyword: 'KEYWORDS', definition: 'Display this help message' },
+  { keyword: 'REQUEST', definition: 'Request agenda from subscribers' },
+  { keyword: 'VIEW', definition: 'View list of saved agenda' },
+  { keyword: 'DISTRIBUTE', definition: 'Send agenda list to all subscribers' },
+  { keyword: 'STASH', definition: 'Remove all saved agenda' },
+  { keyword: 'ANNOUNCE [department] [content]', definition: 'Announce to all subscribers' },
+  { keyword: 'AGENDA [department]\n> [Agenda 1]\n> [Agenda 2]', definition: 'Add agenda' },
+];
 
 // Firebase config
 firebase.initializeApp({
   /**
-   * Include your Firebase application configs here.
+   * Firebase configs
    */
 })
 
@@ -42,14 +52,14 @@ module.exports = fromExpress(app);
 const App = {
   name: 'YSES SMS Bot',
   tokenizer: 'https://developer.globelabs.com.ph/oauth/access_token',
-  api_id: '', // API ID provided from globelabs
-  app_secret: '', // app secret
-  senderAddress: 0, // last 4 digits of sender address
-  developer: { // developer contact for monitoring reports
+  api_id: '', // API Id
+  app_secret: '', // App secret
+  senderAddress: 1111, // last 4 digits of provider number
+  developer: { // dev contact for reports
     contact: '',
     name: 'Ralph'
   },
-  SEND_SMS: token => `https://devapi.globelabs.com.ph/smsmessaging/v1/outbound/7610/requests?access_token=${token}`
+  SEND_SMS: token => `https://devapi.globelabs.com.ph/smsmessaging/v1/outbound/1111/requests?access_token=${token}`
 }
 
 const Template = {
@@ -72,11 +82,13 @@ const Message = {
   format: (header, body) => `[YSES / ${header}]\n\n${body}`,
   error: `Uh oh, I wasn't able to understand your request. If you think that this is a bug, please contact ${App.developer.name}.`,
   request: 'Hello, exec. Please send in your agenda and I\'ll process it. :)',
-  dept_err: 'Sorry, I didn\'t get that. I only know the abbreviated department names (EXEC, PAD, VL, HR, SEC, FIN, SCHO).',
+  dept_err: 'Sorry, I didn\'t get that. I only know the abbreviated department names (CEO, PAD, VL, HR, SEC, FIN, SCHO).',
   agenda: 'Thanks, boss. I\'ll save that for later. :)',
   no_agenda: 'Oops, it seems like there are no saved agenda yet.',
   stash: 'Sure, I\'ll do a spring cleaning of the agenda list.',
-  blank: 'What? I wasn\'t able to record that. Are you sure it\'s not empty?'
+  blank: 'What? I wasn\'t able to record that. Are you sure it\'s not empty?',
+  distribute: agenda => `[YSES / Agenda]\nHello, exec! Here are the agenda I\'ve collected so far:\n\n${agenda}\n\nLet me know if you need my help. :)`,
+  help: `[YSES / Help]\nHi, I am the ${App.name}. In order to tell me something that you want me to do, please use the keywords below.\n\n${KEYWORDS.reduce((acc, { definition, keyword }) => acc + `> ${definition}\nSEND: ${keyword}\n\n`, '').trim()}`
 }
 
 /**
@@ -178,7 +190,7 @@ const stashAgenda = async () => {
   }
 }
 
-const getAllAgenda = () => {
+function getAllAgenda() {
   return new Promise(async (resolve, reject) => {
     try {
       const agenda = await database.ref('/agenda').once('value');
@@ -223,6 +235,7 @@ function unsubscribeRouter(req, res) {
 }
 
 async function receiveRouter(req, res) {
+  let agenda = '';
   const [ sms ] = req.body.inboundSMSMessageList.inboundSMSMessage;
   logSMS(sms);
 
@@ -242,14 +255,27 @@ async function receiveRouter(req, res) {
       break;
 
     case 'VIEW':
-      const agenda = await getAllAgenda();
+      agenda = await getAllAgenda();
       
       if (agenda) sendSMS(senderAddress, Message.format('Agenda', agenda));
       else sendSMS(senderAddress, Message.no_agenda);
       break;
 
+    case 'DISTRIBUTE':
+      report(`+63${senderAddress} requested to distribute agenda`);
+      agenda = await getAllAgenda();
+
+      if (agenda) sendToAll(Message.distribute(agenda));
+      else sendSMS(senderAddress, Message.no_agenda);
+
+      break;
+
     case 'HELLO':
       sendSMS(senderAddress, Message.welcome);
+      break;
+
+    case 'KEYWORDS':
+      sendSMS(senderAddress, Message.help);
       break;
 
     default:
