@@ -7,34 +7,31 @@ const USER = {
     department: 'PAD'
 }
 
-test('creates new user', () => {
-    const user = new User(USER, USER.department, USER.position);
+describe('User', () => {
+    test('is created', () => {
+        const user = new User(USER, USER.department, USER.position);
 
-    expect(user).toEqual({
-        access_token: USER.access_token,
-        subscriber_number: USER.subscriber_number
+        expect(user).toEqual(USER);
+    });
+
+    test('is removed', () => {
+        const user = new User(USER, USER.department, USER.position);
+        user.remove();
+
+        expect(user).toEqual(USER);
+    });
+
+    test('is retrieved', async () => {
+        const user = new User(USER, USER.department, USER.position);
+        const data = await User.find(user.subscriber_number);
+
+        expect(data).toEqual(USER);
+    });
+
+    test('list is retrieved', async () => {
+        const data = await User.find(null, true);
+
+        expect(Array.isArray(data)).toBeTruthy();
     });
 });
 
-test('removes new user', () => {
-    const user = new User(USER, USER.department, USER.position);
-    user.remove();
-
-    expect(user).toEqual({
-        access_token: USER.access_token,
-        subscriber_number: USER.subscriber_number
-    });
-});
-
-test('gets user', async () => {
-    const user = new User(USER, USER.department, USER.position);
-    const data = await User.find(user.subscriber_number);
-
-    expect(data).toEqual(USER);
-});
-
-test('gets multiple users', async () => {
-    const data = await User.find(null, true);
-
-    expect(Array.isArray(data)).toBeTruthy();
-});

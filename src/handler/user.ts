@@ -5,6 +5,8 @@ export class User {
     constructor({ access_token, subscriber_number }, department, position) {
         this.access_token = access_token;
         this.subscriber_number = subscriber_number;
+        this.department = department;
+        this.position = position;
 
         db.ref('/users/' + subscriber_number).set({
             access_token,

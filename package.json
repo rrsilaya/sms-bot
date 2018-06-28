@@ -18,6 +18,6 @@
   },
   "scripts": {
     "start": "nodemon",
-    "test": "jest"
+    "test": "jest --forceExit"
   }
 }
