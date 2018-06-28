@@ -44,7 +44,7 @@ export class Message {
 
     static retrieve(ref) {
         return new Promise(async resolve => {
-            const data = await db.ref('/messages/' + ref).once('value');
+            const data = await db.ref(`/messages${ref ? `/${ref}` : ''}`).once('value');
             const message = [];
 
             const entries = Object.values(data.val() || {}).filter(val => typeof val === 'object');

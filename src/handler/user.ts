@@ -16,16 +16,16 @@ export class User {
     }
 
     remove() {
-        db.ref('/users/' + subscriber_number).set(null);
-        logger(`User unsubscribed: ${subscriber_number}`, 'UNSUBSCRIBED', true);
+        db.ref('/users/' + this.subscriber_number).set(null);
+        logger(`User unsubscribed: ${this.subscriber_number}`, 'UNSUBSCRIBED', true);
 
         return this;
     }
 
-    static find(ref = '', transform = false) {
+    static find(ref, transform = false) {
         return new Promise(async resolve => {
-            const user = await db.ref('/users/' + ref).once('value');
-            const data = transform ? Object.values(user.val()) : user.val();
+            const user = await db.ref(`/users${ref ? `/${ref}` : ''}`).once('value');
+            const data = transform ? Object.values(user.val() || {}) : user.val();
 
             resolve(data);
         });
