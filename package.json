@@ -1,0 +1,18 @@
+{
+  "dependencies": {
+    "axios": "^0.18.0",
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3",
+    "firebase": "^5.1.0"
+  },
+  "devDependencies": {
+    "jest": "^23.2.0",
+    "nodemon": "^1.17.5",
+    "ts-node": "^7.0.0",
+    "typescript": "^2.9.2"
+  },
+  "scripts": {
+    "start": "nodemon",
+    "test": "jest"
+  }
+}
