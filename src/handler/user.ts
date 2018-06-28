@@ -22,7 +22,7 @@ export class User {
         return this;
     }
 
-    find(ref, transform = false) {
+    static find(ref = '', transform = false) {
         return new Promise(async resolve => {
             const user = await db.ref('/users/' + ref).once('value');
             const data = transform ? Object.values(user.val()) : user.val();

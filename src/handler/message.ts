@@ -12,7 +12,7 @@ export class Message {
     }
 
     send() {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             try {
                 const { data } = await axios.post(this.access_token, {
                     outboundSMSMessageRequest: {
